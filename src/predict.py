@@ -1,23 +1,30 @@
 from flask import Flask
 from flask import request
 from flask import jsonify
+import pickle
 
 app = Flask("base-line-model")
 
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    input_var = request.get_json()
+    customer = request.get_json()
 
     # X = dv.transform([customer])
     # y_pred = model.predict_proba(X)[0, 1]
     # churn = y_pred >= 0.5
+    output_file = 'sgd-classifier.bin'
+    with open(output_file, 'rb') as f_in: 
+        dv, model = pickle.load(f_in)
+
+    X = dv.transform([customer])
+    y_pred = model.predict_proba(X)
 
     result = {
-        "id": input_var["id"],
-        "Status_C": 0.628084,
-        "Status_CL": 0.034788,
-        "Status_D": 0.337128,
+        "id": customer["id"],
+        "Status_C": y_pred[0, 0],
+        "Status_CL": y_pred[0, 1],
+        "Status_D": y_pred[0, 2],
     }
 
     return jsonify(result)
